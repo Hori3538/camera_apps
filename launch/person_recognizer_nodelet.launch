@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="manager_name" default="nodelet_manager" />
+
+  <node pkg="nodelet" type="nodelet" name="$(arg manager_name)" args="manager" output="screen">
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="person_recognizer_nodelet"
+      args="load camera_apps/PersonRecognizerNodelet $(arg manager_name)" >
+  <param name="model_path" value="$(find camera_apps)/model/mask_rcnn" />
+    <rosparam file="$(find camera_apps)/config/param/person_recognizer.yaml" command="load"/>
+  </node>    
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_fixed_to_origin"
+      args="0 0 0 4.7124 0 4.7124 camera_fixed_frame camera_color_optical_frame">
+  </node>
+
+  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find camera_apps)/config/rviz/camera_apps.rviz" output="screen"/>
+
+  <node name="image_republish" pkg="image_transport" type="republish" args="compressed raw">
+      <remap from="in" to="/camera/color/image_raw/" />
+      <remap from="out" to="/camera/color/image_raw" />
+  </node>
+
+</launch>

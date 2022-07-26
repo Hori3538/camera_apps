@@ -1,0 +1,13 @@
+camera_topic_name: /camera/color/image_raw
+conf_threshold: 0.4
+mask_threshold: 0.4
+
+points_limit: 4000
+# points_limit: 5000
+# points_limit: 8000
+cluster_tolerance: 0.02 #if points_limit == 10000
+min_cluster_size: 100
+max_cluster_size: 20000
+
+through_th_z_min: -0.7
+through_th_z_max: 2.0

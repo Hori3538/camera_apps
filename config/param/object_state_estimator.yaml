@@ -1,0 +1,33 @@
+img_width: 640
+img_height: 480
+
+# parameters of outlier removing
+# not used 
+mean_k: 5
+std_dev_th: 0.1
+
+# parameteres of voxel grid filtering
+# not used
+leafsize: 0.05
+
+points_limit: 5000
+# points_limit: 10000 
+
+# parameters of clustering
+# cluster_tolerance: 0.025 #if points_limit == 5000
+cluster_tolerance: 0.02 #if points_limit == 10000
+min_cluster_size: 100
+max_cluster_size: 20000
+
+publish_object_pc_flag: false
+
+# parameters of surface segmentation 
+# not used
+ransac_dist_th: 0.01
+
+# parameters of pass through filtering
+through_th_z_min: -0.55
+through_th_z_max: 2.0
+
+downsample_for_visualize: false
+leafsize_for_visualize: 0.05

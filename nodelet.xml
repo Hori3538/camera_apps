@@ -6,5 +6,64 @@
         ObjectDetectorNodelet.
     </description>
   </class>
+</library>
 
+<library path="lib/libmask_rcnn_nodelet">
+    <class name="camera_apps/MaskRcnnNodelet"
+      type="camera_apps::MaskRcnnNodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        MaskRcnnNodelet.
+    </description>
+  </class>
+</library>
+
+<library path="lib/libperson_recognizer_nodelet">
+    <class name="camera_apps/PersonRecognizerNodelet"
+      type="camera_apps::PersonRecognizerNodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        PersonRecognizerNodelet.
+    </description>
+  </class>
+</library>
+
+<library path="lib/libobject_state_estimator_nodelet">
+    <class name="camera_apps/ObjectStateEstimatorNodelet"
+      type="camera_apps::ObjectStateEstimatorNodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        ObjectStateEstimatorNodelet.
+    </description>
+  </class>
+</library>
+
+<library path="lib/libmotion_predictor_nodelet">
+    <class name="camera_apps/MotionPredictorNodelet"
+      type="camera_apps::MotionPredictorNodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        MotionPredictorNodelet.
+    </description>
+  </class>
+</library>
+
+<library path="lib/libhog_detector_nodelet">
+    <class name="camera_apps/HogDetectorNodelet"
+      type="camera_apps::HogDetectorNodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        HogDetectorNodelet.
+    </description>
+  </class>
+</library>
+
+<library path="lib/libyolov5_nodelet">
+    <class name="camera_apps/Yolov5Nodelet"
+      type="camera_apps::Yolov5Nodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        Yolov5Nodelet.
+    </description>
+  </class>
 </library>

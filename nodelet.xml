@@ -57,3 +57,13 @@
     </description>
   </class>
 </library>
+
+<library path="lib/libyolov5_nodelet">
+    <class name="camera_apps/Yolov5Nodelet"
+      type="camera_apps::Yolov5Nodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        Yolov5Nodelet.
+    </description>
+  </class>
+</library>

@@ -86,6 +86,7 @@ namespace camera_apps
             // remove_outlier(object_pc);
             for(const auto& point: object_pc->points) object_pcs_->points.push_back(point);
             object_pcs_->header = object_pc->header;
+            std::cout << "frame: " << object_pcs_->header.frame_id << std::endl;
 
             geometry_msgs::PointStamped centroid = caluculate_centroid(object_pc);
             object_state.centroid = centroid;

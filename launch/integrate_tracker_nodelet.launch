@@ -17,7 +17,7 @@
   </node>    
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="tf_fixed_to_origin"
-      args="0 0 0 4.7124 0 4.7124 camera_fixed_frame camera_color_optical_frame">
+      args="0 0 0 4.7124 0 4.7124 camera_fixed_frame camera_color_optical_frame ">
   </node>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="tf_camera_to_vaiconcamera"

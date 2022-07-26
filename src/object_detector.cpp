@@ -69,7 +69,10 @@ namespace camera_apps
         // cv::Mat blob = cv::dnn::blobFromImage(image, 1, cv::Size(image.cols, image.rows), cv::Scalar());
         net_.setInput(blob);
         cv::Mat pred = net_.forward();
+        std::cout << "pred: " << pred.size << std::endl;
         cv::Mat pred_mat(pred.size[2], pred.size[3], CV_32F, pred.ptr<float>());
+        std::cout << "pred_mat.size: " << pred_mat.size << std::endl;
+        std::cout << "pred_mat.rows: " << pred_mat.rows << std::endl;
 
         // for(int i=0; i<1; i++){
         for(int i=0; i<pred_mat.rows; i++){

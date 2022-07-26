@@ -9,8 +9,6 @@ int main(int argc, char** argv)
     ros::NodeHandle pnh("~");
     camera_apps::MaskRcnn mask_rcnn(nh, pnh);
 
-    mask_rcnn.process();
-
     ros::spin();
     return 0;
 }

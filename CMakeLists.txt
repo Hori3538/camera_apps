@@ -115,3 +115,16 @@ target_link_libraries(hog_detector_nodelet
     ${OpenCV_LIBRARIES}
     ${catkin_LIBRARIES}
 )
+
+add_executable(yolov5_node src/yolov5_node.cpp src/yolov5.cpp)
+add_dependencies(yolov5_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(
+    yolov5_node
+    ${OpenCV_LIBRARIES}
+    ${catkin_LIBRARIES}
+    )
+add_library(yolov5_nodelet src/yolov5.cpp src/yolov5_nodelet.cpp)
+target_link_libraries(yolov5_nodelet
+    ${OpenCV_LIBRARIES}
+    ${catkin_LIBRARIES}
+)

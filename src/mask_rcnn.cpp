@@ -13,7 +13,6 @@ namespace camera_apps
         image_sub_ = it.subscribe(camera_topic_name_, 1, &MaskRcnn::image_callback, this);
         image_pub_ = it.advertise("/detected_image", 1);
         bboxes_pub_ = nh.advertise<camera_apps_msgs::BoundingBoxes>("/bounding_boxes", 1);
-        // bbox_pub_ = nh.advertise<camera_apps_msgs::BoundingBox>("/bounding_box", 1);
 
         set_network();
     }
@@ -26,7 +25,6 @@ namespace camera_apps
             cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
             input_image_ = cv_ptr->image;
             bboxes_.header.stamp = msg->header.stamp;
-            // msg_stamp_ = msg->header.stamp;
             object_detect(input_image_);
         }
         catch(cv_bridge::Exception &e){
@@ -58,8 +56,11 @@ namespace camera_apps
         std::string label_path = model_path_ + "/object_detection_classes_coco.txt";
 
         net_ = cv::dnn::readNet(proto_path, weight_path);
+
+        // GPU
         net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+
         class_names_ = read_file(label_path);
 
         std::string colorsFile = model_path_ + "/colors.txt";
@@ -79,9 +80,7 @@ namespace camera_apps
     void MaskRcnn::object_detect(cv::Mat &image)
     {
         bboxes_.bounding_boxes.clear();
-        // bbox_.header.stamp = msg_stamp_;
 
-        // cv::Mat blob = cv::dnn::blobFromImage(image, 1, cv::Size(300, 300));
         cv::Mat blob = cv::dnn::blobFromImage(image, 1, cv::Size(image.cols, image.rows), cv::Scalar());
         net_.setInput(blob);
         std::vector<std::string> outNames(2);
@@ -100,7 +99,6 @@ namespace camera_apps
 
         pred_detections = pred_detections.reshape(1, pred_detections.total() / 7);
 
-        // for(int i=0; i<1; i++){
         for(int i=0; i<num_detections; i++){
             float conf = pred_detections.at<float>(i, 2);
 
@@ -131,34 +129,9 @@ namespace camera_apps
             }
         }
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-        // bboxes_pub_.publish(bboxes_);
         image_pub_.publish(msg);
     }
 
-    // void MaskRcnn::draw_bbox(cv::Mat &image, int x0, int y0, int x1, int y1, std::string label)
-    // {
-    //     cv::Rect object(x0, y0, x1-x0, y1-y0);
-    //     cv::rectangle(image, object, cv::Scalar(255, 255, 255), 2);
-    //
-    //     int baseline = 0;
-    //     cv::Size  label_size = cv::getTextSize(label,
-    //             cv::FONT_HERSHEY_SIMPLEX,0.5, 1, &baseline);
-    //     cv::putText(image, label, cv::Point(x0, y0),
-    //             cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 0), 2);
-    // }
-    //
-    // // void MaskRcnn::send_bbox(int x0, int x1, int y0, int y1, float conf,
-    // //         int id, std::string class_name)
-    // // {
-    // //     bbox_.confidence = conf;
-    // //     bbox_.xmin = x0;
-    // //     bbox_.xmax = x1; 
-    // //     bbox_.ymin = y0;
-    // //     bbox_.ymax = y1;
-    // //     bbox_.id = id;
-    // //     bbox_.label = class_name;
-    // //     bbox_pub_.publish(bbox_);
-    // // }
     void MaskRcnn::draw_bbox(cv::Mat &image, cv::Rect rect, int id, float conf, cv::Mat& object_mask)
     {
         // cv::Rect object(x0, y0, x1-x0, y1-y0);
@@ -177,10 +150,6 @@ namespace camera_apps
         cv::Mat mask = (object_mask > mask_threshold_);
         cv::Mat colored_roi = (0.3 * color + 0.7 * image(rect));
         colored_roi.convertTo(colored_roi, CV_8UC3);
-        // cv::imshow("roi", colored_roi);
-        // int key = cv::waitKey(5);
-        // cv::imshow("mask", mask);
-        // int key = cv::waitKey(5);
 
         std::vector<cv::Mat> contours;
         cv::Mat hierarchy;
@@ -190,18 +159,6 @@ namespace camera_apps
         colored_roi.copyTo(image(rect), mask);
     }
 
-    // void MaskRcnn::send_bbox(int x0, int x1, int y0, int y1, float conf,
-    //         int id, std::string class_name)
-    // {
-    //     bbox_.confidence = conf;
-    //     bbox_.xmin = x0;
-    //     bbox_.xmax = x1; 
-    //     bbox_.ymin = y0;
-    //     bbox_.ymax = y1;
-    //     bbox_.id = id;
-    //     bbox_.label = class_name;
-    //     bbox_pub_.publish(bbox_);
-    // }
 
     void MaskRcnn::set_bbox(int x0, int x1, int y0, int y1, float conf,
             int id, std::string class_name)
@@ -217,12 +174,6 @@ namespace camera_apps
         bbox.label = class_name;
 
         bboxes_.bounding_boxes.push_back(bbox);
-    }
-
-    void MaskRcnn::process()
-    {
-        std::cout << "start process" << std::endl;
-
     }
 }
 

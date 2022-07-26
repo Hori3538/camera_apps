@@ -18,7 +18,6 @@ namespace camera_apps{
                 ros::NodeHandle pnh("~");
                 pnh = getPrivateNodeHandle();
                 mask_rcnn_ = new camera_apps::MaskRcnn(nh, pnh);
-                mask_rcnn_->process();
             }
             camera_apps::MaskRcnn *mask_rcnn_;
     };

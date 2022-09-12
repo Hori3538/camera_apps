@@ -18,7 +18,6 @@ namespace camera_apps{
                 ros::NodeHandle pnh("~");
                 pnh = getPrivateNodeHandle();
                 object_detector_ = new camera_apps::ObjectDetector(nh, pnh);
-                object_detector_->process();
             }
             camera_apps::ObjectDetector *object_detector_;
     };

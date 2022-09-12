@@ -65,6 +65,7 @@ namespace camera_apps
             // void send_bbox(int x0, int x1, int y0, int y1, float conf, int id, std::string class_name);
 
             std::string camera_topic_name_;
+            std::string point_cloud_topic_name_;
             std::string model_path_;
             double conf_threshold_;
             double mask_threshold_;

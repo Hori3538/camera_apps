@@ -9,8 +9,6 @@ int main(int argc, char** argv)
     ros::NodeHandle pnh("~");
     camera_apps::ObjectDetector object_detector(nh, pnh);
 
-    object_detector.process();
-
     ros::spin();
     return 0;
 }

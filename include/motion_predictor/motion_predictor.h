@@ -17,7 +17,7 @@
 #include <camera_apps_msgs/ObjectInfo.h>
 #include <camera_apps_msgs/ObjectsInfo.h>
 
-#include "hungarian.h"
+#include "common/hungarian.h"
 
 namespace camera_apps
 {

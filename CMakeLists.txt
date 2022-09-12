@@ -128,3 +128,12 @@ target_link_libraries(yolov5_nodelet
     ${OpenCV_LIBRARIES}
     ${catkin_LIBRARIES}
 )
+
+add_executable(person_tracker_node src/person_tracker_node.cpp src/person_tracker.cpp src/hungarian.cpp)
+add_dependencies(person_tracker_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(
+    person_tracker_node
+    ${catkin_LIBRARIES}
+    ${PCL_LIBRARIES}
+    ${Eigen3_LIBRARIES}
+    )

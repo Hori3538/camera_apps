@@ -1,11 +1,19 @@
-camera_topic_name: /camera/color/image_raw
+# realsense
+# camera_topic_name: /camera/color/image_raw
+# point_cloud_topic_name: /camera/depth_registered/points
+
+# theta_s
+camera_topic_name: /equirectangular/image_raw
+point_cloud_topic_name: /theta_pointcloud
+
 conf_threshold: 0.4
 mask_threshold: 0.4
 
 points_limit: 4000
 # points_limit: 5000
 # points_limit: 8000
-cluster_tolerance: 0.02 #if points_limit == 10000
+# cluster_tolerance: 0.02 #if points_limit == 10000
+cluster_tolerance: 0.04 # for theta
 min_cluster_size: 100
 max_cluster_size: 20000
 

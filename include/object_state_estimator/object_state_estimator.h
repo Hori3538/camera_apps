@@ -51,6 +51,7 @@ namespace camera_apps
             void through_filtering(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_in);
 
 
+            //parameter
             int img_width_;
             int img_height_;
             int mean_k_;

@@ -5,6 +5,7 @@ namespace camera_apps
     PersonRecognizer::PersonRecognizer(ros::NodeHandle &nh, ros::NodeHandle &pnh)
     {
         pnh.param("camera_topic_name", camera_topic_name_, std::string("/camera/color/image_raw"));
+        pnh.param("point_cloud_topic_name", point_cloud_topic_name_, std::string("/camera/depth_registered/points"));
         pnh.getParam("model_path", model_path_);
         pnh.param("conf_threshold", conf_threshold_, 0.4);
         pnh.param("mask_threshold", mask_threshold_, 0.4);
@@ -17,7 +18,7 @@ namespace camera_apps
         
         image_transport::ImageTransport it(nh);
         image_sub_ = it.subscribe(camera_topic_name_, 1, &PersonRecognizer::image_callback, this);
-        pc_sub_ = nh.subscribe("/camera/depth_registered/points", 1, &PersonRecognizer::pc_callback, this);
+        pc_sub_ = nh.subscribe(point_cloud_topic_name_, 1, &PersonRecognizer::pc_callback, this);
 
         image_pub_ = it.advertise("/detected_image", 1);
         object_pc_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/object_state/object_pc", 1);
@@ -96,7 +97,8 @@ namespace camera_apps
     {
         try{
             geometry_msgs::TransformStamped transform_stamped;
-            transform_stamped = tf_buffer_.lookupTransform("camera_fixed_frame", "camera_color_optical_frame", ros::Time(0));
+            // transform_stamped = tf_buffer_.lookupTransform("camera_fixed_frame", "camera_color_optical_frame", ros::Time(0));
+            transform_stamped = tf_buffer_.lookupTransform("camera_fixed_frame", msg->header.frame_id, ros::Time(0));
             Eigen::Matrix4f mat = tf2::transformToEigen(transform_stamped.transform).matrix().cast<float>();
 
             sensor_msgs::PointCloud2 msg_temp;

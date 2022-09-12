@@ -12,7 +12,6 @@ namespace camera_apps
         image_sub_ = it.subscribe(camera_topic_name_, 1, &ObjectDetector::image_callback, this);
         image_pub_ = it.advertise("/detected_image", 1);
         bboxes_pub_ = nh.advertise<camera_apps_msgs::BoundingBoxes>("/bounding_boxes", 1);
-        // bbox_pub_ = nh.advertise<camera_apps_msgs::BoundingBox>("/bounding_box", 1);
 
         set_network();
     }
@@ -25,7 +24,6 @@ namespace camera_apps
             cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
             input_image_ = cv_ptr->image;
             bboxes_.header.stamp = msg->header.stamp;
-            // msg_stamp_ = msg->header.stamp;
             object_detect(input_image_);
         }
         catch(cv_bridge::Exception &e){
@@ -63,18 +61,12 @@ namespace camera_apps
     void ObjectDetector::object_detect(cv::Mat &image)
     {
         bboxes_.bounding_boxes.clear();
-        // bbox_.header.stamp = msg_stamp_;
 
         cv::Mat blob = cv::dnn::blobFromImage(image, 1, cv::Size(300, 300));
-        // cv::Mat blob = cv::dnn::blobFromImage(image, 1, cv::Size(image.cols, image.rows), cv::Scalar());
         net_.setInput(blob);
         cv::Mat pred = net_.forward();
-        std::cout << "pred: " << pred.size << std::endl;
         cv::Mat pred_mat(pred.size[2], pred.size[3], CV_32F, pred.ptr<float>());
-        std::cout << "pred_mat.size: " << pred_mat.size << std::endl;
-        std::cout << "pred_mat.rows: " << pred_mat.rows << std::endl;
 
-        // for(int i=0; i<1; i++){
         for(int i=0; i<pred_mat.rows; i++){
             float conf = pred_mat.at<float>(i, 2);
 
@@ -90,7 +82,6 @@ namespace camera_apps
                 if(id == 1){
                 // if(true){
                     set_bbox(x0, x1, y0, y1, conf, id, class_name);
-                    // send_bbox(x0, x1, y0, y1, conf, id, class_name);
                     draw_bbox(image, x0, y0, x1, y1, label);
                 }
             }
@@ -112,18 +103,6 @@ namespace camera_apps
                 cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 0), 2);
     }
 
-    // void ObjectDetector::send_bbox(int x0, int x1, int y0, int y1, float conf,
-    //         int id, std::string class_name)
-    // {
-    //     bbox_.confidence = conf;
-    //     bbox_.xmin = x0;
-    //     bbox_.xmax = x1; 
-    //     bbox_.ymin = y0;
-    //     bbox_.ymax = y1;
-    //     bbox_.id = id;
-    //     bbox_.label = class_name;
-    //     bbox_pub_.publish(bbox_);
-    // }
 
     void ObjectDetector::set_bbox(int x0, int x1, int y0, int y1, float conf,
             int id, std::string class_name)
@@ -139,12 +118,6 @@ namespace camera_apps
         bbox.label = class_name;
 
         bboxes_.bounding_boxes.push_back(bbox);
-    }
-
-    void ObjectDetector::process()
-    {
-        std::cout << "start process" << std::endl;
-
     }
 }
 

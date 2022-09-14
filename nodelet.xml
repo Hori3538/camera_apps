@@ -67,3 +67,13 @@
     </description>
   </class>
 </library>
+
+<library path="lib/libmask_rcnn2_nodelet">
+    <class name="camera_apps/MaskRcnn2Nodelet"
+      type="camera_apps::MaskRcnn2Nodelet"
+     base_class_type="nodelet::Nodelet">
+    <description>
+        MaskRcnn2Nodelet.
+    </description>
+  </class>
+</library>

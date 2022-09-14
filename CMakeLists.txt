@@ -137,3 +137,16 @@ target_link_libraries(
     ${PCL_LIBRARIES}
     ${Eigen3_LIBRARIES}
     )
+
+add_executable(mask_rcnn2_node src/mask_rcnn2_node.cpp src/mask_rcnn2.cpp)
+add_dependencies(mask_rcnn2_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(
+    mask_rcnn2_node
+    ${OpenCV_LIBRARIES}
+    ${catkin_LIBRARIES}
+    )
+add_library(mask_rcnn2_nodelet src/mask_rcnn2.cpp src/mask_rcnn2_nodelet.cpp)
+target_link_libraries(mask_rcnn2_nodelet
+    ${OpenCV_LIBRARIES}
+    ${catkin_LIBRARIES}
+)

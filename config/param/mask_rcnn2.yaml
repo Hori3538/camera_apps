@@ -3,3 +3,5 @@ camera_topic_name: /camera/color/image_raw
 # model_path: $(find camera_apps)/model
 conf_threshold: 0.4
 mask_threshold: 0.4
+
+detect_only_person: true

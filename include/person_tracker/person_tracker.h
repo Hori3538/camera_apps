@@ -5,10 +5,15 @@
 #include <tf/tf.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_eigen/tf2_eigen.h>
 
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseArray.h>
 #include <nav_msgs/Path.h>
+
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
+#include <pcl/common/centroid.h>
 
 #include <Eigen/Dense>
 
@@ -39,7 +44,6 @@ class PersonTracker
         PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh);
         ~PersonTracker();
     private:
-        void object_states_callback(const camera_apps_msgs::ObjectStatesConstPtr &msg);
         void pose_array_callback(const geometry_msgs::PoseArrayConstPtr &msg);
         camera_apps_msgs::ObjectStates pose_array_to_object_states(geometry_msgs::PoseArray& pose_array);
         void register_person(camera_apps_msgs::ObjectState& object_state);
@@ -73,6 +77,8 @@ class PersonTracker
         std::vector<int> create_map(std::vector<std::vector<double>> cost_mat);
         bool is_duplicate(int index);
 
+        void pose_array_to_pcl(geometry_msgs::PoseArray& pose_array, pcl::PointCloud<pcl::PointXYZ>::Ptr output_pc);
+
 
         double error_threshold_;
         double time_threshold_;
@@ -88,8 +94,8 @@ class PersonTracker
         bool calc_future_trajectory_flag_;
         bool visualize_future_trajectory_flag_;
         bool visualize_past_trajectory_flag_;
-        double register_th_;
         double duplicate_th_;
+        std::string target_frame_;
 
         double sigma_initial_P_theta_;
         double sigma_initial_P_velocity_;
@@ -106,6 +112,7 @@ class PersonTracker
         std::vector<int> valid_id_list_;
         std::vector<PersonInfo> person_list_;
         camera_apps_msgs::ObjectStates object_states_;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr output_pc_ {new pcl::PointCloud<pcl::PointXYZ>};
 
         Eigen::MatrixXd Q_;
         Eigen::MatrixXd H_;

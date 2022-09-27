@@ -5,7 +5,7 @@ hist_similarity_threshold: 0.4
 time_threshold: 1.5
 # time_threshold: 2.0
 past_path_threshold: 50
-person_num_limit: 10
+person_num_limit: 30
 
 observation_noise_ratio: 0.05
 sigma_initial_P_theta: 6.2832
@@ -32,3 +32,4 @@ visualize_past_trajectory_flag: false
 # register_th: 0.9 #mask r-cnn
 register_th: 0.8 #mobilenetssd
 duplicate_th: 0.35
+target_frame: "map"

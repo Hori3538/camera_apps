@@ -24,10 +24,9 @@ PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)
     pnh.param("calc_future_trajectory_flag", calc_future_trajectory_flag_, false);
     pnh.param("visualize_future_trajectory_flag", visualize_future_trajectory_flag_, false);
     pnh.param("visualize_past_trajectory_flag", visualize_past_trajectory_flag_, true);
-    pnh.param("register_th", register_th_, 0.9);
     pnh.param("duplicate_th", duplicate_th_, 0.2);
+    pnh.param("target_frame", target_frame_, std::string("map"));
 
-    object_states_sub_ = nh.subscribe("/object_states", 5, &PersonTracker::object_states_callback, this);
     pose_array_sub_ = nh.subscribe("/person_poses", 5, &PersonTracker::pose_array_callback, this);
     past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/past_trajectory", 20);
     filtered_past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/filtered_past_trajectory", 20);
@@ -47,46 +46,31 @@ PersonTracker::~PersonTracker()
     delete this->tf2_listener_;
 }
 
-void PersonTracker::object_states_callback(const camera_apps_msgs::ObjectStatesConstPtr &msg)
-{
-    object_states_ = *msg;
-    if(object_states_.object_states.size() == 0) return;
-
-
-    std::vector<std::vector<double>> dist_cost_mat = create_cost_mat(object_states_, person_list_);
-
-    std::vector<int> map = create_map(dist_cost_mat); 
-    for(int i=0; i<map.size(); i++){
-        if(map[i] == -1){
-            if(object_states_.object_states[i].confidence >= register_th_ && !is_duplicate(i)){
-                register_person(object_states_.object_states[i]);
-            }
-        }
-        else if(dist_cost_mat[i][map[i]] < error_threshold_ && !is_duplicate(i)){
-            update_person(person_list_[map[i]].id, object_states_.object_states[i]);
-        }
-        else{
-            if(object_states_.object_states[i].confidence >= register_th_ && !is_duplicate(i)){
-                register_person(object_states_.object_states[i]);
-            }
-        }
-    }
-
-    lost_judge();
-    if(visualize_past_trajectory_flag_) visualize_trajectory();
-    visualize_filtered_trajectory();
-    if(visualize_future_trajectory_flag_) visualize_future_trajectory();
-    visualize_filtered_pose();
-
-    for(auto& person_info: person_list_){
-        if(person_info.update_flag){
-            person_info.update_flag = false;
-        }
-    }
-}
 void PersonTracker::pose_array_callback(const geometry_msgs::PoseArrayConstPtr &msg)
 {
     geometry_msgs::PoseArray pose_array = *msg;
+    pose_array_to_pcl(pose_array, output_pc_);
+    try{
+        geometry_msgs::TransformStamped transform;
+        // transform = tf_buffer_.lookupTransform(pose_array.header.frame_id, target_frame_, ros::Time(0));
+        transform = tf_buffer_.lookupTransform(target_frame_, pose_array.header.frame_id, ros::Time(0));
+        geometry_msgs::PoseArray transformed_pose_array;
+        transformed_pose_array.header = pose_array.header;
+        transformed_pose_array.header.frame_id = target_frame_;
+        for(const auto& pose: pose_array.poses){
+            geometry_msgs::PoseStamped pose_stamped;
+            pose_stamped.pose = pose;
+            pose_stamped.header = pose_array.header;
+            tf2::doTransform(pose_stamped, pose_stamped, transform);
+
+            transformed_pose_array.poses.push_back(pose_stamped.pose);
+        }
+        pose_array = transformed_pose_array;
+    }
+    catch(tf2::TransformException &ex){
+        ROS_WARN("%s", ex.what());
+        return;
+    }
     object_states_ = pose_array_to_object_states(pose_array);
     if(object_states_.object_states.size() == 0) return;
 
@@ -105,7 +89,8 @@ void PersonTracker::pose_array_callback(const geometry_msgs::PoseArrayConstPtr &
             update_person(person_list_[map[i]].id, object_states_.object_states[i]);
         }
         else{
-            if(object_states_.object_states[i].confidence >= register_th_ && !is_duplicate(i)){
+            // if(object_states_.object_states[i].confidence >= register_th_ && !is_duplicate(i)){
+            if(!is_duplicate(i)){
                 // std::cout << "register2" << std::endl;
                 register_person(object_states_.object_states[i]);
             }
@@ -549,4 +534,19 @@ bool PersonTracker::is_duplicate(int index)
         }
     }
     return false;
+}
+void PersonTracker::pose_array_to_pcl(geometry_msgs::PoseArray& pose_array, pcl::PointCloud<pcl::PointXYZ>::Ptr output_pc)
+{
+    // pcl_conversions::toPCL(output_pc->header, pose_array.header);
+    output_pc->points.clear();
+    pcl_conversions::toPCL(pose_array.header, output_pc->header);
+    for(const auto& pose: pose_array.poses){
+        pcl::PointXYZ point_pcl;
+        point_pcl.x = pose.position.x;
+        point_pcl.y = pose.position.y;
+        point_pcl.z = pose.position.z;
+
+        output_pc->points.push_back(point_pcl);
+    }
+
 }

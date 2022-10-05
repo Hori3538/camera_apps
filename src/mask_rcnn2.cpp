@@ -59,8 +59,14 @@ namespace camera_apps
         std::string label_path = model_path_ + "/object_detection_classes_coco.txt";
 
         net_ = cv::dnn::readNet(proto_path, weight_path);
+
+        //GPU
         net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+
+        //NCS2
+        // net_.setPreferableBackend(cv2.dnn.DNN_BACKEND_DEFAULT)
+        // net_.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
         class_names_ = read_file(label_path);
 
         std::string colorsFile = model_path_ + "/colors.txt";

@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <mask_rcnn2/mask_rcnn2.h>
+#include <mask_rcnn2/mask_rcnn2.hpp>
 
 int main(int argc, char** argv)
 {
@@ -9,6 +9,6 @@ int main(int argc, char** argv)
     ros::NodeHandle pnh("~");
     camera_apps::MaskRcnn2 mask_rcnn2(nh, pnh);
 
-    ros::spin();
+    mask_rcnn2.process();
     return 0;
 }

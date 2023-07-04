@@ -1,7 +1,7 @@
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
-#include <mask_rcnn2/mask_rcnn2.h>
+#include <mask_rcnn2/mask_rcnn2.hpp>
 
 
 namespace camera_apps{

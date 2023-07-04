@@ -1,5 +1,0 @@
-camera_topic_name: /camera/color/image_raw
-# camera_topic_name: /equirectangular/image_raw
-# model_path: $(find camera_apps)/model
-conf_threshold: 0.4
-# conf_threshold: 0.3

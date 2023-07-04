@@ -22,6 +22,8 @@
 
 #include "common/hungarian.h"
 
+#include <iomanip>
+
 struct PersonInfo
 {
     int id;
@@ -43,6 +45,7 @@ class PersonTracker
     public:
         PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh);
         ~PersonTracker();
+        void process();
     private:
         void pose_array_callback(const geometry_msgs::PoseArrayConstPtr &msg);
         camera_apps_msgs::ObjectStates pose_array_to_object_states(geometry_msgs::PoseArray& pose_array);
@@ -51,8 +54,9 @@ class PersonTracker
         void update_trajectory(nav_msgs::Path& trajectory, geometry_msgs::PointStamped centroid);
         void visualize_trajectory();
         void visualize_filtered_trajectory();
-        void visualize_future_trajectory();
+        // void visualize_future_trajectory();
         void visualize_filtered_pose();
+        void visualize_current_timestamp_filtered_pose();
         void delete_person(int id);
         void lost_judge();
         int id_to_index(int id);
@@ -77,7 +81,6 @@ class PersonTracker
         std::vector<int> create_map(std::vector<std::vector<double>> cost_mat);
         bool is_duplicate(int index);
 
-        void pose_array_to_pcl(geometry_msgs::PoseArray& pose_array, pcl::PointCloud<pcl::PointXYZ>::Ptr output_pc);
 
 
         double error_threshold_;
@@ -92,10 +95,11 @@ class PersonTracker
         double predict_time_;
         double predict_dt_;
         bool calc_future_trajectory_flag_;
-        bool visualize_future_trajectory_flag_;
+        // bool visualize_future_trajectory_flag_;
         bool visualize_past_trajectory_flag_;
         double duplicate_th_;
         std::string target_frame_;
+        int hz_;
 
         double sigma_initial_P_theta_;
         double sigma_initial_P_velocity_;
@@ -112,7 +116,7 @@ class PersonTracker
         std::vector<int> valid_id_list_;
         std::vector<PersonInfo> person_list_;
         camera_apps_msgs::ObjectStates object_states_;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr output_pc_ {new pcl::PointCloud<pcl::PointXYZ>};
+        bool callback_flag_ = false;
 
         Eigen::MatrixXd Q_;
         Eigen::MatrixXd H_;
@@ -121,9 +125,9 @@ class PersonTracker
         ros::Subscriber pose_array_sub_;
         ros::Publisher past_trajectory_pub_;
         ros::Publisher filtered_past_trajectory_pub_;
-        ros::Publisher future_trajectory_pub_;
-        ros::Publisher filtered_pose_pub_;
+        // ros::Publisher future_trajectory_pub_;
         ros::Publisher filtered_pose_array_pub_;
+        ros::Publisher current_timestamp_filtered_pose_array_pub_;
 
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener* tf2_listener_;

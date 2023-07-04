@@ -9,6 +9,7 @@ int main(int argc, char** argv)
     ros::NodeHandle pnh("~");
     PersonTracker person_tracker(nh, pnh);
 
-    ros::spin();
+    person_tracker.process();
+
     return 0;
 }

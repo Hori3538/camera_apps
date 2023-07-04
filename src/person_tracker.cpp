@@ -1,3 +1,5 @@
+#include "geometry_msgs/PoseStamped.h"
+#include "ros/time.h"
 #include <person_tracker/person_tracker.h>
 
 PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)
@@ -22,17 +24,18 @@ PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)
     pnh.param("predict_time", predict_time_, 2.0);
     pnh.param("predict_dt", predict_dt_, 0.1);
     pnh.param("calc_future_trajectory_flag", calc_future_trajectory_flag_, false);
-    pnh.param("visualize_future_trajectory_flag", visualize_future_trajectory_flag_, false);
+    // pnh.param("visualize_future_trajectory_flag", visualize_future_trajectory_flag_, false);
     pnh.param("visualize_past_trajectory_flag", visualize_past_trajectory_flag_, true);
     pnh.param("duplicate_th", duplicate_th_, 0.2);
     pnh.param("target_frame", target_frame_, std::string("map"));
+    pnh.param<int>("hz", hz_, 10);
 
     pose_array_sub_ = nh.subscribe("/person_poses", 5, &PersonTracker::pose_array_callback, this);
     past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/past_trajectory", 20);
     filtered_past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/filtered_past_trajectory", 20);
-    future_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/future_trajectory", 20);
-    filtered_pose_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/filtered_pose", 1);
+    // future_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/future_trajectory", 20);
     filtered_pose_array_pub_ = nh.advertise<geometry_msgs::PoseArray>("/filtered_pose_array", 1);
+    current_timestamp_filtered_pose_array_pub_ = nh.advertise<geometry_msgs::PoseArray>("/current_timestamp_filtered_pose_array", 1);
     
     tf2_listener_ = new tf2_ros::TransformListener(tf_buffer_);
 
@@ -48,8 +51,8 @@ PersonTracker::~PersonTracker()
 
 void PersonTracker::pose_array_callback(const geometry_msgs::PoseArrayConstPtr &msg)
 {
+    callback_flag_ = true;
     geometry_msgs::PoseArray pose_array = *msg;
-    pose_array_to_pcl(pose_array, output_pc_);
     try{
         geometry_msgs::TransformStamped transform;
         // transform = tf_buffer_.lookupTransform(pose_array.header.frame_id, target_frame_, ros::Time(0));
@@ -98,10 +101,6 @@ void PersonTracker::pose_array_callback(const geometry_msgs::PoseArrayConstPtr &
     }
 
     lost_judge();
-    if(visualize_past_trajectory_flag_) visualize_trajectory();
-    visualize_filtered_trajectory();
-    if(visualize_future_trajectory_flag_) visualize_future_trajectory();
-    visualize_filtered_pose();
 
     for(auto& person_info: person_list_){
         if(person_info.update_flag){
@@ -192,7 +191,7 @@ void PersonTracker::update_person(int id, camera_apps_msgs::ObjectState& object_
     geometry_msgs::PoseStamped filtered_pose = create_pose_from_X(person_list_[index].X);
     filtered_pose.header = object_state.centroid.header;
 
-    double dist = std::sqrt(std::pow(person_list_[index].filtered_pose.pose.position.x - filtered_pose.pose.position.x, 2) + std::pow(person_list_[index].filtered_pose.pose.position.y - filtered_pose.pose.position.y, 2));
+    // double dist = std::sqrt(std::pow(person_list_[index].filtered_pose.pose.position.x - filtered_pose.pose.position.x, 2) + std::pow(person_list_[index].filtered_pose.pose.position.y - filtered_pose.pose.position.y, 2));
 
     person_list_[index].filtered_pose = filtered_pose;
     person_list_[index].filtered_trajectory.poses.push_back(filtered_pose);
@@ -268,14 +267,14 @@ void PersonTracker::visualize_filtered_trajectory()
     }
 }
 
-void PersonTracker::visualize_future_trajectory()
-{
-    for(const auto& person_info: person_list_){
-        if(person_info.future_trajectory.poses.size() >= 1){
-            future_trajectory_pub_.publish(person_info.future_trajectory);
-        }
-    }
-}
+// void PersonTracker::visualize_future_trajectory()
+// {
+//     for(const auto& person_info: person_list_){
+//         if(person_info.future_trajectory.poses.size() >= 1){
+//             future_trajectory_pub_.publish(person_info.future_trajectory);
+//         }
+//     }
+// }
 
 void PersonTracker::visualize_filtered_pose()
 {
@@ -288,6 +287,29 @@ void PersonTracker::visualize_filtered_pose()
         }
     }
     filtered_pose_array_pub_.publish(filtered_pose_array);
+}
+
+void PersonTracker::visualize_current_timestamp_filtered_pose()
+{
+    geometry_msgs::PoseArray current_timestamp_filtered_pose_array;
+    if(person_list_.size() == 0) return;
+    current_timestamp_filtered_pose_array.header.frame_id = person_list_[0].trajectory.header.frame_id;
+    current_timestamp_filtered_pose_array.header.stamp = ros::Time::now();
+    for(const auto& person_info: person_list_){
+        if(person_info.filtered_trajectory.poses.size() < data_num_th_visualize_) continue;
+        double dt = (ros::Time::now() - person_info.filtered_pose.header.stamp).nsec / 10e9;
+        // std::cout << std::setprecision(3) << "dt: " << dt << std::endl;
+
+        Eigen::MatrixXd X = person_info.X;
+        X = calculate_X_hat(X, dt);
+
+        geometry_msgs::Pose current_timestamp_filtered_pose = create_pose_from_X(X).pose;
+
+        current_timestamp_filtered_pose_array.poses.push_back(current_timestamp_filtered_pose);
+        
+    }
+    current_timestamp_filtered_pose_array_pub_.publish(current_timestamp_filtered_pose_array);
+
 }
 
 double PersonTracker::adjust_yaw(double yaw)
@@ -535,18 +557,22 @@ bool PersonTracker::is_duplicate(int index)
     }
     return false;
 }
-void PersonTracker::pose_array_to_pcl(geometry_msgs::PoseArray& pose_array, pcl::PointCloud<pcl::PointXYZ>::Ptr output_pc)
+
+void PersonTracker::process()
 {
-    // pcl_conversions::toPCL(output_pc->header, pose_array.header);
-    output_pc->points.clear();
-    pcl_conversions::toPCL(pose_array.header, output_pc->header);
-    for(const auto& pose: pose_array.poses){
-        pcl::PointXYZ point_pcl;
-        point_pcl.x = pose.position.x;
-        point_pcl.y = pose.position.y;
-        point_pcl.z = pose.position.z;
-
-        output_pc->points.push_back(point_pcl);
-    }
-
+        ros::Rate loop_rate(hz_);
+        
+        while(ros::ok())
+        {
+            if(callback_flag_)
+            {
+                if(visualize_past_trajectory_flag_) visualize_trajectory();
+                visualize_filtered_trajectory();
+                // if(visualize_future_trajectory_flag_) visualize_future_trajectory();
+                visualize_filtered_pose();
+                visualize_current_timestamp_filtered_pose();
+            }
+            ros::spinOnce();
+            loop_rate.sleep();
+        }
 }

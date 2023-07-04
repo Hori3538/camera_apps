@@ -6,7 +6,7 @@
   </node>    
 
 
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find camera_apps)/config/rviz/person_tracker.rviz" output="screen"/>
+  <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find camera_apps)/config/rviz/person_tracker.rviz" output="screen"/> -->
 
   <!-- <node name="image_republish" pkg="image_transport" type="republish" args="compressed raw"> -->
   <!--     <remap from="in" to="/camera/color/image_raw/" /> -->

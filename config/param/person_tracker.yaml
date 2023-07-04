@@ -1,7 +1,9 @@
+hz: 10
+
 # error_threshold: 0.5
 error_threshold: 0.4
+# error_threshold: 0.3
 # error_threshold: 0.55
-hist_similarity_threshold: 0.4
 time_threshold: 1.5
 # time_threshold: 2.0
 past_path_threshold: 50
@@ -11,13 +13,18 @@ observation_noise_ratio: 0.05
 sigma_initial_P_theta: 6.2832
 sigma_initial_P_velocity: 3.0
 sigma_initial_P_omega: 3.1416
-# sigma_initial_P_omega: 6.2832
-sigma_Q_x: 3.0
-sigma_Q_y: 3.0
+
+# sigma_Q_x: 3.0
+# sigma_Q_y: 3.0
+# sigma_Q_theta: 3.1416
+# sigma_Q_velocity: 3.0
+# sigma_Q_omega: 3.1416
+
+sigma_Q_x: 1.5
+sigma_Q_y: 1.5
 sigma_Q_theta: 3.1416
 sigma_Q_velocity: 3.0
 sigma_Q_omega: 3.1416
-# sigma_Q_omega: 6.2832
 
 trajectory_z: 0.0
 data_num_th_visualize: 1
@@ -26,7 +33,7 @@ predict_time: 2.0
 predict_dt: 0.1
 calc_future_trajectory_flag: false
 visualize_future_trajectory_flag: false
-visualize_past_trajectory_flag: false
+visualize_past_trajectory_flag: true
 
 # register_th: 1.5 #hog
 # register_th: 0.9 #mask r-cnn

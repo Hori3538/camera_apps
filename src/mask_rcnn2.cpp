@@ -1,4 +1,4 @@
-#include <mask_rcnn2/mask_rcnn2.h>
+#include <mask_rcnn2/mask_rcnn2.hpp>
 
 namespace camera_apps
 {
@@ -9,6 +9,7 @@ namespace camera_apps
         pnh.param("conf_threshold", conf_threshold_, 0.4);
         pnh.param("mask_threshold", mask_threshold_, 0.4);
         pnh.param("detect_only_person", detect_only_person_, true);
+        pnh.param<int>("hz", hz_, 10);
         
         image_transport::ImageTransport it(nh);
         image_sub_ = it.subscribe(camera_topic_name_, 1, &MaskRcnn2::image_callback, this);
@@ -22,12 +23,12 @@ namespace camera_apps
     void MaskRcnn2::image_callback(const sensor_msgs::ImageConstPtr &msg)
     {
 
-        cv_bridge::CvImagePtr cv_ptr;
+        // cv_bridge::CvImagePtr cv_ptr;
         try{
-            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-            input_image_ = cv_ptr->image.clone();
+            input_image_cvptr_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+            // input_image_ = cv_ptr->image.clone();
             masks_.header.stamp = msg->header.stamp;
-            object_detect(cv_ptr->image);
+            // object_detect(cv_ptr->image);
         }
         catch(cv_bridge::Exception &e){
             ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -65,8 +66,8 @@ namespace camera_apps
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 
         //NCS2
-        // net_.setPreferableBackend(cv2.dnn.DNN_BACKEND_DEFAULT)
-        // net_.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+        // net_.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
+        // net_.setPreferableTarget(cv::dnn::DNN_TARGET_MYRIAD);
         class_names_ = read_file(label_path);
 
         std::string colorsFile = model_path_ + "/colors.txt";
@@ -131,18 +132,10 @@ namespace camera_apps
                 cv::resize(object_mask, object_mask, cv::Size(rect.width, rect.height));
                 cv::Mat mask = (object_mask > mask_threshold_);
                 mask.convertTo(mask, CV_8U);
-                // cv::imshow("mask", mask);
-                // int key = cv::waitKey(5);
-                // cv::imshow("roi", input_image_(rect));
-                // int key = cv::waitKey(5);
 
                 draw_bbox(image, rect, id, conf, mask);
                 set_mask(rect, id, conf, mask, class_name);
 
-                // if(id == 1){
-                //     draw_bbox(image, rect, id, conf, mask);
-                //     set_mask(rect, )
-                // }
             }
         }
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
@@ -191,5 +184,21 @@ namespace camera_apps
         mask_msg.mask = *cv_bridge::CvImage(std_msgs::Header(), "mono8", mask).toImageMsg();
         masks_.masks.push_back(mask_msg);
     }
-}
 
+    void MaskRcnn2::process()
+    {
+        ros::Rate loop_rate(hz_);
+        
+        while(ros::ok())
+        {
+            if(input_image_cvptr_.has_value())
+            {
+                object_detect(input_image_cvptr_.value()->image);
+                input_image_cvptr_.reset();
+            }
+            ros::spinOnce();
+            loop_rate.sleep();
+        }
+
+    }
+}

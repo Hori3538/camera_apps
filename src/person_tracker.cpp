@@ -1,5 +1,3 @@
-#include "geometry_msgs/PoseStamped.h"
-#include "ros/time.h"
 #include <person_tracker/person_tracker.h>
 
 PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)

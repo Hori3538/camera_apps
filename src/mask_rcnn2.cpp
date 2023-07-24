@@ -199,6 +199,5 @@ namespace camera_apps
             ros::spinOnce();
             loop_rate.sleep();
         }
-
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="camera_apps" type="person_tracker_node" name="person_tracker_node"
+      output="screen">
+    <rosparam file="$(find camera_apps)/config/param/person_tracker.yaml" command="load"/>
+  </node>    
+</launch>

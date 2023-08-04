@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 
-  <node pkg="camera_apps" type="mask_rcnn2_node" name="mask_rcnn2_node" output="screen">
+  <node pkg="camera_apps" type="mask_rcnn_node" name="mask_rcnn_node" output="screen">
     <param name="model_path" value="$(find camera_apps)/model/mask_rcnn" />
-    <rosparam file="$(find camera_apps)/config/param/mask_rcnn2.yaml" command="load"/>
+    <rosparam file="$(find camera_apps)/config/param/mask_rcnn.yaml" command="load"/>
   </node>
 
   <node pkg="rviz" name="rviz" type="rviz" args="-d $(find camera_apps)/config/rviz/camera_apps.rviz" output="screen"/>

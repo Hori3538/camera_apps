@@ -1,5 +1,5 @@
-#ifndef MASK_RCNN2
-#define MASK_RCNN2
+#ifndef MASK_RCNN
+#define MASK_RCNN
 
 #include <ros/ros.h>
 
@@ -21,10 +21,10 @@
 
 namespace camera_apps
 {
-    class MaskRcnn2
+    class MaskRcnn
     {
         public:
-            MaskRcnn2(ros::NodeHandle &nh, ros::NodeHandle &pnh);
+            MaskRcnn(ros::NodeHandle &nh, ros::NodeHandle &pnh);
             void process();
         private:
             void image_callback(const sensor_msgs::ImageConstPtr &msg);

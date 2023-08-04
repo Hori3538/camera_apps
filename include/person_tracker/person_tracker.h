@@ -2,6 +2,7 @@
 #define PERSON_TRACKER
 
 #include <ros/ros.h>
+#include <string>
 #include <tf/tf.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -81,8 +82,7 @@ class PersonTracker
         std::vector<int> create_map(std::vector<std::vector<double>> cost_mat);
         bool is_duplicate(int index);
 
-
-
+        int hz_;
         double error_threshold_;
         double time_threshold_;
         int past_path_threshold_;
@@ -99,7 +99,7 @@ class PersonTracker
         bool visualize_past_trajectory_flag_;
         double duplicate_th_;
         std::string target_frame_;
-        int hz_;
+        std::string person_poses_topic_name_;
 
         double sigma_initial_P_theta_;
         double sigma_initial_P_velocity_;

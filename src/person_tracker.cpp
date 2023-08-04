@@ -1,7 +1,9 @@
 #include <person_tracker/person_tracker.h>
+#include <string>
 
 PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)
 {
+    pnh.param<int>("hz", hz_, 10);
     pnh.param("error_threshold", error_threshold_, 0.5);
     pnh.param("time_threshold", time_threshold_, 2.0);
     pnh.param("past_path_threshold", past_path_threshold_, 50);
@@ -26,14 +28,14 @@ PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)
     pnh.param("visualize_past_trajectory_flag", visualize_past_trajectory_flag_, true);
     pnh.param("duplicate_th", duplicate_th_, 0.2);
     pnh.param("target_frame", target_frame_, std::string("map"));
-    pnh.param<int>("hz", hz_, 10);
+    pnh.param<std::string>("person_poses_topic_name", person_poses_topic_name_, "/person_poses");
 
-    pose_array_sub_ = nh.subscribe("/person_poses", 5, &PersonTracker::pose_array_callback, this);
-    past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/past_trajectory", 20);
-    filtered_past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/filtered_past_trajectory", 20);
+    pose_array_sub_ = nh.subscribe<geometry_msgs::PoseArray>(person_poses_topic_name_, 5, &PersonTracker::pose_array_callback, this);
+    past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/person_tracker/past_trajectory", 20);
+    filtered_past_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/person_tracker/filtered_past_trajectory", 20);
     // future_trajectory_pub_ = nh.advertise<nav_msgs::Path>("/future_trajectory", 20);
-    filtered_pose_array_pub_ = nh.advertise<geometry_msgs::PoseArray>("/filtered_pose_array", 1);
-    current_timestamp_filtered_pose_array_pub_ = nh.advertise<geometry_msgs::PoseArray>("/current_timestamp_filtered_pose_array", 1);
+    filtered_pose_array_pub_ = nh.advertise<geometry_msgs::PoseArray>("/person_tracker/filtered_pose_array", 1);
+    current_timestamp_filtered_pose_array_pub_ = nh.advertise<geometry_msgs::PoseArray>("/person_tracker/current_timestamp_filtered_pose_array", 1);
     
     tf2_listener_ = new tf2_ros::TransformListener(tf_buffer_);
 
@@ -53,7 +55,6 @@ void PersonTracker::pose_array_callback(const geometry_msgs::PoseArrayConstPtr &
     geometry_msgs::PoseArray pose_array = *msg;
     try{
         geometry_msgs::TransformStamped transform;
-        // transform = tf_buffer_.lookupTransform(pose_array.header.frame_id, target_frame_, ros::Time(0));
         transform = tf_buffer_.lookupTransform(target_frame_, pose_array.header.frame_id, ros::Time(0));
         geometry_msgs::PoseArray transformed_pose_array;
         transformed_pose_array.header = pose_array.header;

@@ -1,26 +1,26 @@
-#include <mask_rcnn2/mask_rcnn2.hpp>
+#include <mask_rcnn/mask_rcnn.hpp>
 
 namespace camera_apps
 {
-    MaskRcnn2::MaskRcnn2(ros::NodeHandle &nh, ros::NodeHandle &pnh)
+    MaskRcnn::MaskRcnn(ros::NodeHandle &nh, ros::NodeHandle &pnh)
     {
-        pnh.param("camera_topic_name", camera_topic_name_, std::string("/camera/color/image_raw"));
         pnh.getParam("model_path", model_path_);
-        pnh.param("conf_threshold", conf_threshold_, 0.4);
-        pnh.param("mask_threshold", mask_threshold_, 0.4);
-        pnh.param("detect_only_person", detect_only_person_, true);
+        pnh.param<std::string>("camera_topic_name", camera_topic_name_, "/camera/color/image_raw");
+        pnh.param<double>("conf_threshold", conf_threshold_, 0.4);
+        pnh.param<double>("mask_threshold", mask_threshold_, 0.4);
+        pnh.param<bool>("detect_only_person", detect_only_person_, true);
         pnh.param<int>("hz", hz_, 10);
         
         image_transport::ImageTransport it(nh);
-        image_sub_ = it.subscribe(camera_topic_name_, 1, &MaskRcnn2::image_callback, this);
+        image_sub_ = it.subscribe(camera_topic_name_, 1, &MaskRcnn::image_callback, this);
 
-        image_pub_ = it.advertise("/detected_image", 1);
-        masks_pub_ = nh.advertise<camera_apps_msgs::Masks>("/masks", 1);
+        image_pub_ = it.advertise("/mask_rcnn/detected_image", 1);
+        masks_pub_ = nh.advertise<camera_apps_msgs::Masks>("/mask_rcnn/masks", 1);
 
         set_network();
     }
 
-    void MaskRcnn2::image_callback(const sensor_msgs::ImageConstPtr &msg)
+    void MaskRcnn::image_callback(const sensor_msgs::ImageConstPtr &msg)
     {
 
         // cv_bridge::CvImagePtr cv_ptr;
@@ -37,7 +37,7 @@ namespace camera_apps
     }
 
 
-    std::vector<std::string> MaskRcnn2::read_file(std::string filename, char delimiter)
+    std::vector<std::string> MaskRcnn::read_file(std::string filename, char delimiter)
     {
         std::vector<std::string> result;
         std::ifstream fin(filename);
@@ -53,7 +53,7 @@ namespace camera_apps
         return result;
     }
 
-    void MaskRcnn2::set_network()
+    void MaskRcnn::set_network()
     {
         std::string proto_path = model_path_ + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
         std::string weight_path = model_path_ + "/frozen_inference_graph.pb";
@@ -84,7 +84,7 @@ namespace camera_apps
         }
     }
 
-    void MaskRcnn2::object_detect(cv::Mat &image)
+    void MaskRcnn::object_detect(cv::Mat &image)
     {
         masks_.masks.clear();
 
@@ -143,7 +143,7 @@ namespace camera_apps
         masks_pub_.publish(masks_);
     }
 
-    void MaskRcnn2::draw_bbox(cv::Mat &image, cv::Rect rect, int id, float conf, cv::Mat& mask)
+    void MaskRcnn::draw_bbox(cv::Mat &image, cv::Rect rect, int id, float conf, cv::Mat& mask)
     {
         cv::rectangle(image, rect, cv::Scalar(255, 255, 255), 2);
 
@@ -166,7 +166,7 @@ namespace camera_apps
         colored_roi.copyTo(image(rect), mask);
     }
 
-    void MaskRcnn2::set_mask(cv::Rect rect, int id, float conf, cv::Mat& mask, std::string class_name)
+    void MaskRcnn::set_mask(cv::Rect rect, int id, float conf, cv::Mat& mask, std::string class_name)
     {
 
         camera_apps_msgs::Mask mask_msg;
@@ -185,7 +185,7 @@ namespace camera_apps
         masks_.masks.push_back(mask_msg);
     }
 
-    void MaskRcnn2::process()
+    void MaskRcnn::process()
     {
         ros::Rate loop_rate(hz_);
         

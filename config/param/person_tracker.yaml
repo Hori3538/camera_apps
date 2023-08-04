@@ -1,11 +1,7 @@
 hz: 10
 
 error_threshold: 0.5
-# error_threshold: 0.4
-# error_threshold: 0.3
-# error_threshold: 0.55
 time_threshold: 1.5
-# time_threshold: 2.0
 past_path_threshold: 50
 person_num_limit: 30
 
@@ -45,4 +41,7 @@ register_th: 0.9 #mask r-cnn
 # register_th: 0.8 #mobilenetssd
 # duplicate_th: 0.35
 duplicate_th: 0.5
+
 target_frame: "map"
+person_poses_topic_name: "/use_pixel/person_poses"
+

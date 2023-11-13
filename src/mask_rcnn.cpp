@@ -24,11 +24,14 @@ namespace camera_apps
     {
 
         // cv_bridge::CvImagePtr cv_ptr;
-        try{
+        try
+        {
             input_image_cvptr_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
             // input_image_ = cv_ptr->image.clone();
             masks_.header.stamp = msg->header.stamp;
             // object_detect(cv_ptr->image);
+            masks_.height = msg->height;
+            masks_.width = msg->width;
         }
         catch(cv_bridge::Exception &e){
             ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -109,34 +112,35 @@ namespace camera_apps
 
         // for(int i=0; i<1; i++){
         for(int i=0; i<num_detections; i++){
+
             float conf = pred_detections.at<float>(i, 2);
+            if(conf < conf_threshold_) continue;
 
-            if(conf > conf_threshold_){
-                int x0 = int(pred_detections.at<float>(i, 3) * image.cols);
-                int y0 = int(pred_detections.at<float>(i, 4) * image.rows);
-                int x1 = int(pred_detections.at<float>(i, 5) * image.cols);
-                int y1 = int(pred_detections.at<float>(i, 6) * image.rows);
+            int x0 = int(pred_detections.at<float>(i, 3) * image.cols);
+            int y0 = int(pred_detections.at<float>(i, 4) * image.rows);
+            int x1 = int(pred_detections.at<float>(i, 5) * image.cols);
+            int y1 = int(pred_detections.at<float>(i, 6) * image.rows);
 
-                x0 = std::max(0, std::min(x0, image.cols - 1));
-                y0 = std::max(0, std::min(y0, image.rows - 1));
-                x1 = std::max(0, std::min(x1, image.cols - 1));
-                y1 = std::max(0, std::min(y1, image.rows - 1));
-                cv::Rect rect(x0, y0, x1-x0+1, y1-y0+1);
+            x0 = std::max(0, std::min(x0, image.cols - 1));
+            y0 = std::max(0, std::min(y0, image.rows - 1));
+            x1 = std::max(0, std::min(x1, image.cols - 1));
+            y1 = std::max(0, std::min(y1, image.rows - 1));
+            cv::Rect rect(x0, y0, x1-x0+1, y1-y0+1);
 
-                int id = int(pred_detections.at<float>(i, 1));
-                if(detect_only_person_ && id != 0) continue;
-                std::string class_name = class_names_[id];
-                std::string label = class_name + ":" + std::to_string(conf).substr(0, 4);
+            int id = int(pred_detections.at<float>(i, 1));
+            if(detect_only_person_ && id != 0) continue;
+            std::string class_name = class_names_[id];
+            std::string label = class_name + ":" + std::to_string(conf).substr(0, 4);
 
-                cv::Mat object_mask(pred_masks.size[2], pred_masks.size[3], CV_32F, pred_masks.ptr<float>(i, id));
-                cv::resize(object_mask, object_mask, cv::Size(rect.width, rect.height));
-                cv::Mat mask = (object_mask > mask_threshold_);
-                mask.convertTo(mask, CV_8U);
+            cv::Mat object_mask(pred_masks.size[2], pred_masks.size[3], CV_32F, pred_masks.ptr<float>(i, id));
+            cv::resize(object_mask, object_mask, cv::Size(rect.width, rect.height));
+            cv::Mat mask = (object_mask > mask_threshold_);
+            mask.convertTo(mask, CV_8U);
 
-                draw_bbox(image, rect, id, conf, mask);
-                set_mask(rect, id, conf, mask, class_name);
+            draw_bbox(image, rect, id, conf, mask);
+            set_mask(rect, id, conf, mask, class_name);
 
-            }
+
         }
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
         image_pub_.publish(msg);

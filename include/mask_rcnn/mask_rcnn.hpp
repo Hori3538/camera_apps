@@ -28,7 +28,7 @@ namespace camera_apps
             void process();
         private:
             void image_callback(const sensor_msgs::ImageConstPtr &msg);
-            std::vector<std::string> read_file(std::string filename, char delimiter='\n');
+            static std::vector<std::string> read_file(std::string filename, char delimiter='\n');
 
             void set_network();
             void object_detect(cv::Mat &image);

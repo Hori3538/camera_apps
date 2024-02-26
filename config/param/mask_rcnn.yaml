@@ -1,7 +1,7 @@
 hz: 5
 camera_topic_name: /equirectangular/image_raw
 # model_path: $(find camera_apps)/model
-conf_threshold: 0.4
-mask_threshold: 0.4
+conf_threshold: 0.4 #threshold of bounding box
+mask_threshold: 0.4 #threshold of mask
 
 detect_only_person: true

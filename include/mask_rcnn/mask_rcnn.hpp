@@ -27,6 +27,15 @@ namespace camera_apps
             MaskRcnn(ros::NodeHandle &nh, ros::NodeHandle &pnh);
             void process();
         private:
+            struct Param
+            {
+                std::string camera_topic_name;
+                std::string model_path;
+                double conf_threshold;
+                double mask_threshold;
+                int hz;
+            };
+
             void image_callback(const sensor_msgs::ImageConstPtr &msg);
             static std::vector<std::string> read_file(std::string filename, char delimiter='\n');
 
@@ -35,12 +44,7 @@ namespace camera_apps
             void draw_bbox(cv::Mat &image, cv::Rect rect, int id, float conf, cv::Mat& object_mask);
             void set_mask(cv::Rect rect, int id, float conf, cv::Mat& mask, std::string class_name);
 
-            std::string camera_topic_name_;
-            std::string model_path_;
-            double conf_threshold_;
-            double mask_threshold_;
-            bool detect_only_person_;
-            int hz_;
+            Param param_;
 
             std::vector<std::string> class_names_;
             std::vector<cv::Scalar> colors_;

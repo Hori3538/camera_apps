@@ -1,3 +1,5 @@
+#include "nav_msgs/Path.h"
+#include "ros/time.h"
 #include <person_tracker/person_tracker.h>
 #include <string>
 
@@ -565,11 +567,20 @@ void PersonTracker::process()
         {
             if(callback_flag_)
             {
+                lost_judge();
                 if(visualize_past_trajectory_flag_) visualize_trajectory();
                 visualize_filtered_trajectory();
                 // if(visualize_future_trajectory_flag_) visualize_future_trajectory();
                 visualize_filtered_pose();
                 visualize_current_timestamp_filtered_pose();
+
+                if(person_list_.size() == 0)
+                {
+                    nav_msgs::Path empty_path;
+                    empty_path.header.frame_id = target_frame_;
+                    empty_path.header.stamp = ros::Time::now();
+                    filtered_past_trajectory_pub_.publish(empty_path);
+                }
             }
             ros::spinOnce();
             loop_rate.sleep();

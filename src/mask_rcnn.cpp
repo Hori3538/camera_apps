@@ -4,15 +4,14 @@ namespace camera_apps
 {
     MaskRcnn::MaskRcnn(ros::NodeHandle &nh, ros::NodeHandle &pnh)
     {
-        pnh.getParam("model_path", model_path_);
-        pnh.param<std::string>("camera_topic_name", camera_topic_name_, "/camera/color/image_raw");
-        pnh.param<double>("conf_threshold", conf_threshold_, 0.4);
-        pnh.param<double>("mask_threshold", mask_threshold_, 0.4);
-        pnh.param<bool>("detect_only_person", detect_only_person_, true);
-        pnh.param<int>("hz", hz_, 10);
+        pnh.getParam("model_path", param_.model_path);
+        pnh.param<std::string>("camera_topic_name", param_.camera_topic_name, "/camera/color/image_raw");
+        pnh.param<double>("conf_threshold", param_.conf_threshold, 0.4);
+        pnh.param<double>("mask_threshold", param_.mask_threshold, 0.4);
+        pnh.param<int>("hz", param_.hz, 10);
         
         image_transport::ImageTransport it(nh);
-        image_sub_ = it.subscribe(camera_topic_name_, 1, &MaskRcnn::image_callback, this);
+        image_sub_ = it.subscribe(param_.camera_topic_name, 1, &MaskRcnn::image_callback, this);
 
         image_pub_ = it.advertise("/mask_rcnn/detected_image", 1);
         masks_pub_ = nh.advertise<camera_apps_msgs::Masks>("/mask_rcnn/masks", 1);
@@ -58,9 +57,9 @@ namespace camera_apps
 
     void MaskRcnn::set_network()
     {
-        std::string proto_path = model_path_ + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
-        std::string weight_path = model_path_ + "/frozen_inference_graph.pb";
-        std::string label_path = model_path_ + "/object_detection_classes_coco.txt";
+        std::string proto_path = param_.model_path + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
+        std::string weight_path = param_.model_path + "/frozen_inference_graph.pb";
+        std::string label_path = param_.model_path + "/object_detection_classes_coco.txt";
 
         net_ = cv::dnn::readNet(proto_path, weight_path);
 
@@ -73,7 +72,7 @@ namespace camera_apps
         // net_.setPreferableTarget(cv::dnn::DNN_TARGET_MYRIAD);
         class_names_ = read_file(label_path);
 
-        std::string colorsFile = model_path_ + "/colors.txt";
+        std::string colorsFile = param_.model_path + "/colors.txt";
         std::ifstream colorFptr(colorsFile.c_str());
         std::string line;
         while (getline(colorFptr, line)) {
@@ -114,7 +113,7 @@ namespace camera_apps
         for(int i=0; i<num_detections; i++){
 
             float conf = pred_detections.at<float>(i, 2);
-            if(conf < conf_threshold_) continue;
+            if(conf < param_.conf_threshold) continue;
 
             int x0 = int(pred_detections.at<float>(i, 3) * image.cols);
             int y0 = int(pred_detections.at<float>(i, 4) * image.rows);
@@ -128,13 +127,13 @@ namespace camera_apps
             cv::Rect rect(x0, y0, x1-x0+1, y1-y0+1);
 
             int id = int(pred_detections.at<float>(i, 1));
-            if(detect_only_person_ && id != 0) continue;
+            if(id != 0) continue; // skip if id is person
             std::string class_name = class_names_[id];
             std::string label = class_name + ":" + std::to_string(conf).substr(0, 4);
 
             cv::Mat object_mask(pred_masks.size[2], pred_masks.size[3], CV_32F, pred_masks.ptr<float>(i, id));
             cv::resize(object_mask, object_mask, cv::Size(rect.width, rect.height));
-            cv::Mat mask = (object_mask > mask_threshold_);
+            cv::Mat mask = (object_mask > param_.mask_threshold);
             mask.convertTo(mask, CV_8U);
 
             draw_bbox(image, rect, id, conf, mask);
@@ -191,7 +190,7 @@ namespace camera_apps
 
     void MaskRcnn::process()
     {
-        ros::Rate loop_rate(hz_);
+        ros::Rate loop_rate(param_.hz);
         
         while(ros::ok())
         {

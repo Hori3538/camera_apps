@@ -1,7 +1,4 @@
-#include "nav_msgs/Path.h"
-#include "ros/time.h"
 #include <person_tracker/person_tracker.h>
-#include <string>
 
 PersonTracker::PersonTracker(ros::NodeHandle &nh, ros::NodeHandle &pnh)
 {
@@ -293,7 +290,14 @@ void PersonTracker::visualize_filtered_pose()
 void PersonTracker::visualize_current_timestamp_filtered_pose()
 {
     geometry_msgs::PoseArray current_timestamp_filtered_pose_array;
-    if(person_list_.size() == 0) return;
+    // if(person_list_.size() == 0) return;
+    if(person_list_.size() == 0)
+    {
+        current_timestamp_filtered_pose_array.header.frame_id = target_frame_;
+        current_timestamp_filtered_pose_array.header.stamp = ros::Time::now();
+        current_timestamp_filtered_pose_array_pub_.publish(current_timestamp_filtered_pose_array);
+        return;
+    }
     current_timestamp_filtered_pose_array.header.frame_id = person_list_[0].trajectory.header.frame_id;
     current_timestamp_filtered_pose_array.header.stamp = ros::Time::now();
     for(const auto& person_info: person_list_){
